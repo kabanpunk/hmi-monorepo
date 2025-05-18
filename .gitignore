@@ -1,0 +1,30 @@
+# Node.js dependencies
+node_modules/
+**/node_modules/
+
+# Vite build outputs
+dist/
+**/dist/
+
+# Environment files
+*.env
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+
+# macOS / Windows
+.DS_Store
+Thumbs.db
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Cache
+.cache/

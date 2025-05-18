@@ -32,6 +32,16 @@ export class ToggleButton extends BaseElement<BtnProps> {
         })
     }
 
+    updateFromProps() {
+        this.txt.text = this.customProps.label ?? 'Toggle'
+
+        const bg = this._state ? '#1C3760FF' : '#3b82f6'
+        this.rect.set('fill', bg)
+
+        this.canvas?.requestRenderAll()
+    }
+
+
     private emitState() {
         this.canvas?.fire('element:output', {target: this, name: 'state', value: this._state})
     }

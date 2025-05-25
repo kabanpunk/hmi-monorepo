@@ -47,10 +47,15 @@ export const useSessionStore = defineStore('session', {
     getters: {
         backendInputs(state) {
             return {
-                ...flattenObject(state.plc.inputs, 'outputs.inputs'),
+                /* ───── PLC ───── */
+                ...flattenObject(state.plc.inputs,        'outputs.inputs'),
                 ...flattenObject(state.plc.global_inputs, 'outputs.global_inputs'),
-                ...flattenObject(state.plant.inputs, 'plant_outputs.inputs'),
+                ...flattenObject(state.plc.global_vars,   'outputs.global_vars'),
+
+                /* ──── PLANT ──── */
+                ...flattenObject(state.plant.inputs,        'plant_outputs.inputs'),
                 ...flattenObject(state.plant.global_inputs, 'plant_outputs.global_inputs'),
+                ...flattenObject(state.plant.global_vars,   'plant_outputs.global_vars'),
             }
         },
         backendOutputs(state) {
@@ -87,17 +92,21 @@ export const useSessionStore = defineStore('session', {
             }
         },
 
-        async sendInputs(toSend: Record<string, any>) {
+        async sendInputs(toSend: {
+            inputs?: Record<string, any>
+            plant_inputs?: Record<string, any>
+            global_inputs?: Record<string, any>
+        }) {
             const frm = new FormData()
             frm.append('action', 'loadInputs')
-            frm.append('inputs', JSON.stringify(toSend))
-            frm.append('plant_inputs', JSON.stringify({}))
-            frm.append('global_inputs', JSON.stringify({}))
+            frm.append('inputs', JSON.stringify(toSend.inputs ?? {}))
+            frm.append('plant_inputs', JSON.stringify(toSend.plant_inputs ?? {}))
+            frm.append('global_inputs', JSON.stringify(toSend.global_inputs ?? {}))
 
-            await fetch(
-                api(`/sessions/${this.sessionId}/load_inputs`),
-                {method: 'POST', body: frm}
-            )
-        },
+            await fetch(api(`/sessions/${this.sessionId}/load_inputs`), {
+                method: 'POST',
+                body: frm,
+            })
+        }
     },
 })

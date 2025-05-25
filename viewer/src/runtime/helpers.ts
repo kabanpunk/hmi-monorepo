@@ -3,13 +3,32 @@ export function getByPath(obj: any, path: string) {
 }
 
 export function buildInputPayload(fullPath: string, value: any) {
-    const parts = fullPath.split('.')
-
-    if (parts[0] === 'outputs' && parts[1] === 'inputs') {
-        return {[parts.slice(2).join('.')]: value}   // ⇒ { hands: true }
+    const [root, section, ...rest] = fullPath.split('.')
+    const name = rest.join('.')
+    if (!name) {
+        console.warn('[buildInputPayload] empty name →', fullPath)
+        return {}
     }
 
-    console.warn('[buildInputPayload] unsupported path', full)
+    /*  PLC */
+    if (root === 'outputs') {
+        if (section === 'inputs')
+            return { inputs: { [name]: value } }
+
+        if (section === 'global_inputs')
+            return { global_inputs: { [name]: value } }
+    }
+
+    /*  PLANT */
+    if (root === 'plant_outputs') {
+        if (section === 'inputs')
+            return { plant_inputs: { [name]: value } }
+
+        if (section === 'global_inputs')
+            return { plant_inputs: { [name]: value } }
+    }
+
+    console.warn('[buildInputPayload] unsupported path →', fullPath)
     return {}
 }
 

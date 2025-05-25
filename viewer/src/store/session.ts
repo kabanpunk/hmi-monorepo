@@ -47,12 +47,15 @@ export const useSessionStore = defineStore('session', {
     getters: {
         backendInputs(state) {
             const merged = {
-                ...state.plc.inputs,
-                ...state.plant.inputs,
-                ...state.plc.global_inputs,
-                ...state.plant.global_inputs,
+                inputs:        { ...state.plc.inputs,   ...state.plant.inputs },
+                global_inputs: { ...state.plc.global_inputs, ...state.plant.global_inputs },
+                global_vars:   { ...state.plc.global_vars,   ...state.plant.global_vars },
             }
-            return flattenObject(merged)
+            return {
+                ...flattenObject(merged.inputs,        'inputs'),
+                ...flattenObject(merged.global_inputs, 'global_inputs'),
+                ...flattenObject(merged.global_vars,   'global_vars'),
+            }
         },
         backendOutputs(state) {
             const merged = {
@@ -92,17 +95,22 @@ export const useSessionStore = defineStore('session', {
             }
         },
 
-        async sendInputs(toSend: Record<string, any>) {
+        async sendInputs(toSend: {
+            inputs?:        Record<string, any>
+            plant_inputs?:  Record<string, any>
+            global_inputs?: Record<string, any>
+        }) {
             const frm = new FormData()
-            frm.append('action', 'loadInputs')
-            frm.append('inputs', JSON.stringify(toSend))
-            frm.append('plant_inputs', JSON.stringify({}))
-            frm.append('global_inputs', JSON.stringify({}))
+            frm.append('action',        'loadInputs')
+            frm.append('inputs',        JSON.stringify(toSend.inputs        ?? {}))
+            frm.append('plant_inputs',  JSON.stringify(toSend.plant_inputs  ?? {}))
+            frm.append('global_inputs', JSON.stringify(toSend.global_inputs ?? {}))
 
-            await fetch(
-                api(`/sessions/${this.sessionId}/load_inputs`),
-                {method: 'POST', body: frm}
-            )
-        },
+            await fetch(api(`/sessions/${this.sessionId}/load_inputs`), {
+                method: 'POST',
+                body:   frm,
+            })
+        }
+
     },
 })

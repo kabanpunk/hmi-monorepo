@@ -1,6 +1,7 @@
 import {defineStore} from 'pinia'
 import {flattenObject} from '@/utils/flatten'
 import {deepMerge} from '@/utils/deepMerge'
+import {makeEmpty} from '@/utils/snapshot'
 import {api} from '@/api'
 
 interface RawSnapshot {
@@ -41,8 +42,8 @@ async function fetchJsonWithRetry(
 export const useSessionStore = defineStore('session', {
     state: () => ({
         sessionId: '' as string,
-        plc: {...empty} as RawSnapshot,
-        plant: {...empty} as RawSnapshot,
+        plc:   makeEmpty(),
+        plant: makeEmpty(),
     }),
     getters: {
         backendInputs(state) {

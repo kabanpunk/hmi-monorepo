@@ -7,7 +7,7 @@ interface BtnProps {
 
 export class ToggleButton extends BaseElement<BtnProps> {
     static elementType = 'toggle'
-    static meta = {inputs: [], outputs: ['state']} as const
+    static meta = {inputs: [] as string[], outputs: ['state']}
 
     private rect: fabric.Rect
     private txt: fabric.Text
@@ -27,7 +27,6 @@ export class ToggleButton extends BaseElement<BtnProps> {
             if (!this.isRuntime) return
             this._state = !this._state
             this.updateFromProps()
-            this.emitState()
         })
     }
 

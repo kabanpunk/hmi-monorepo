@@ -8,7 +8,7 @@ interface LedProps {
 
 export class LedIndicator extends BaseElement<LedProps> {
     static elementType = 'led'
-    static meta = {inputs: ['value'], outputs: []} as const
+    static meta = {inputs: ['value'], outputs: [] as string[]}
 
     private circle: fabric.Circle
     private _state = false
@@ -23,7 +23,6 @@ export class LedIndicator extends BaseElement<LedProps> {
             if (!this.isRuntime) return
             this._state = !this._state
             this.updateFromProps()
-            this.emitState()
         })
     }
 

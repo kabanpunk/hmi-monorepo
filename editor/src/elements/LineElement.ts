@@ -8,7 +8,7 @@ interface LineProps {
 
 export class LineElement extends BaseElement<LineProps> {
     static elementType = 'line'
-    static meta = { inputs: [], outputs: [] } as const
+    static meta = { inputs: [] as string[], outputs: [] as string[] }
 
     private line: fabric.Line
 

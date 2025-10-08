@@ -8,7 +8,7 @@ interface NumDisplayProps {
 
 export class NumberDisplay extends BaseElement<NumDisplayProps> {
     static elementType = 'numDisplay'
-    static meta        = { inputs: ['value'], outputs: [] } as const
+    static meta        = { inputs: ['value'], outputs: [] as string[] }
 
     private txt: fabric.Text
 

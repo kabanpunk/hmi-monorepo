@@ -1,7 +1,32 @@
 <template>
   <div v-bind="$attrs" class="w-64 bg-gray-50 border-l p-4 overflow-y-auto text-sm">
     <template v-if="sel">
-      <h2 class="font-semibold text-lg mb-3 capitalize">{{ sel.elementType }}</h2>
+      <h2 class="font-semibold text-lg mb-3 capitalize">{{ displayName }}</h2>
+
+      <details v-if="isGroup" open class="mb-4">
+        <summary class="cursor-pointer font-medium mb-1">Group Properties</summary>
+        <div class="space-y-2">
+          <n-input v-model:value="groupProps.name" size="small" placeholder="Имя группы" />
+          <div class="grid grid-cols-2 gap-2 items-center">
+            <span class="text-xs text-gray-500 uppercase">Фон</span>
+            <n-color-picker size="small" v-model:value="groupProps.fill" @update:value="applyGroupProps" />
+            <span class="text-xs text-gray-500 uppercase">Рамка</span>
+            <n-color-picker size="small" v-model:value="groupProps.stroke" @update:value="applyGroupProps" />
+            <span class="text-xs text-gray-500 uppercase">Толщина</span>
+            <n-input-number size="small" v-model:value="groupProps.strokeWidth" :min="0" @update:value="applyGroupProps" />
+          </div>
+          <div class="space-y-1">
+            <label class="flex items-center gap-2 text-xs text-gray-600">
+              <n-switch size="small" v-model:value="groupProps.locked" @update:value="applyGroupProps" />
+              <span>Lock group</span>
+            </label>
+            <label class="flex items-center gap-2 text-xs text-gray-600">
+              <n-switch size="small" v-model:value="groupProps.hidden" @update:value="applyGroupProps" />
+              <span>Hide group</span>
+            </label>
+          </div>
+        </div>
+      </details>
 
       <!-- ─────────── layer / z‑index controls ─────────── -->
       <details open class="mb-4">
@@ -13,26 +38,14 @@
               secondary
               @click="moveForward"
               :disabled="layerIndex >= maxLayer"
-          >
-            <template #icon>
-              <n-icon>
-                <ArrowUp/>
-              </n-icon>
-            </template>
-          </n-button>
+          >▲</n-button>
           <!-- down / backward -->
           <n-button
               size="tiny"
               secondary
               @click="moveBackward"
               :disabled="layerIndex <= 0"
-          >
-            <template #icon>
-              <n-icon>
-                <ArrowDown/>
-              </n-icon>
-            </template>
-          </n-button>
+          >▼</n-button>
           <!-- direct numeric input -->
           <n-input-number
               v-model:value="layerIndex"
@@ -115,12 +128,11 @@ import {
   NTabs,
   NTabPane,
   NSelect,
-  NIcon,
   NInputNumber,
   NColorPicker,
+  NSwitch,
 } from 'naive-ui'
-import {ArrowUp, ArrowDown} from '@vicons/ionicons5'
-import type {fabric} from 'fabric'
+import {fabric} from 'fabric'
 import {useSessionStore} from '../store/session'
 
 function looksLikeColor(val: any, key = ''): boolean {
@@ -132,8 +144,19 @@ function looksLikeColor(val: any, key = ''): boolean {
 }
 
 /* ─────────── selection & layer index ─────────── */
-const props = defineProps<{ selected: fabric.Object | null }>()
+type EditorBindings = { inputs: Record<string, string>; outputs: Record<string, string> }
+type EditorObject = fabric.Object & {
+  elementType?: string
+  customProps?: Record<string, any>
+  bindings?: EditorBindings
+  meta?: { inputs?: string[]; outputs?: string[] }
+  groupName?: string
+}
+
+const props = defineProps<{ selected: EditorObject | null }>()
 const sel = computed(() => props.selected)
+const isGroup = computed(() => sel.value?.type === 'group')
+const displayName = computed(() => sel.value?.elementType ?? 'object')
 
 const layerIndex = ref(0)
 const maxLayer = ref(0)
@@ -187,9 +210,55 @@ watch(
 
 function applyProps() {
   if (!sel.value) return
-  sel.value.customProps = {...propsProxy}
+  sel.value.customProps = {...propsProxy} as Record<string, any>
   (sel.value as any).updateFromProps?.()
   sel.value.canvas?.requestRenderAll()
+}
+
+/* ─────────── group specific props ─────────── */
+const groupProps = reactive({
+  name: '',
+  fill: 'transparent',
+  stroke: '#000000',
+  strokeWidth: 1,
+  locked: false,
+  hidden: false,
+})
+
+watch(sel, value => {
+  if (value && value.type === 'group') {
+    groupProps.name = (value as any).groupName ?? ''
+    groupProps.fill = (value as any).fill ?? 'transparent'
+    groupProps.stroke = (value as any).stroke ?? '#000000'
+    groupProps.strokeWidth = (value as any).strokeWidth ?? 1
+    groupProps.locked = !!(value.lockMovementX && value.lockMovementY)
+    groupProps.hidden = value.visible === false
+  } else {
+    groupProps.name = ''
+    groupProps.fill = 'transparent'
+    groupProps.stroke = '#000000'
+    groupProps.strokeWidth = 1
+    groupProps.locked = false
+    groupProps.hidden = false
+  }
+}, {immediate: true})
+
+function applyGroupProps() {
+  if (!sel.value || sel.value.type !== 'group') return
+  const group = sel.value as fabric.Group & { groupName?: string }
+  group.groupName = groupProps.name
+  group.set({
+    fill: groupProps.fill,
+    stroke: groupProps.stroke,
+    strokeWidth: groupProps.strokeWidth,
+    visible: !groupProps.hidden
+  })
+  group.lockMovementX = groupProps.locked
+  group.lockMovementY = groupProps.locked
+  group.selectable = !groupProps.locked
+  group.evented = !groupProps.locked
+  group.canvas?.requestRenderAll()
+  group.canvas?.fire('object:modified', {target: group})
 }
 
 /* ─────────── bindings (existing) ─────────── */

@@ -1,9 +1,14 @@
 <template>
-  <div class="flex h-screen overflow-hidden">
-    <LeftSidebar  class="flex-shrink-0" />
-    <CanvasComponent @update:selectedObject="selected = $event" />
-    <RightSidebar :selected="selected" class="flex-shrink-0" />
-  </div>
+  <n-message-provider>
+    <div class="flex h-screen overflow-hidden">
+      <LeftSidebar class="flex-shrink-0" />
+      <div class="flex-1 flex flex-col min-w-0">
+        <EditorToolbar v-if="!editor.isRuntime" class="flex-shrink-0" />
+        <CanvasComponent class="flex-1" @update:selectedObject="selected = $event" />
+      </div>
+      <RightSidebar :selected="selected" class="flex-shrink-0" />
+    </div>
+  </n-message-provider>
 </template>
 
 <script setup lang="ts">
@@ -12,7 +17,11 @@ import LeftSidebar   from './components/LeftSidebar.vue'
 import CanvasComponent from './components/CanvasComponent.vue'
 import RightSidebar  from './components/RightSidebar.vue'
 import { fabric } from 'fabric'
+import EditorToolbar from './components/EditorToolbar.vue'
+import {useEditorStore} from './store/editor'
+import { NMessageProvider } from 'naive-ui'
 
 const selected = ref<fabric.Object | null>(null)
+const editor = useEditorStore()
 
 </script>

@@ -8,7 +8,7 @@ interface NumInputProps {
 
 export class NumberInput extends BaseElement<NumInputProps> {
     static elementType = 'numInput'
-    static meta        = { inputs: [], outputs: ['value'] } as const
+    static meta        = { inputs: [] as string[], outputs: ['value'] }
 
     private txt:    fabric.Text
     private _value: number
